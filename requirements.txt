@@ -1,0 +1,22 @@
+# Core Dependencies (Required)
+flask==3.0.0
+flask-cors==4.0.0
+openai==1.12.0
+numpy==1.24.3
+pillow==10.1.0
+pymongo==4.6.1
+python-dotenv==1.0.0
+werkzeug==3.0.1
+requests==2.31.0
+gunicorn==21.2.0
+
+# Optional Dependencies (Install for advanced features)
+# QR Code Generation
+qrcode[pil]==7.4.2
+python-barcode==0.15.1
+
+# Machine Learning & Computer Vision (for model retraining, Grad-CAM)
+# tensorflow==2.15.0
+# opencv-python==4.9.0.80
+# matplotlib==3.8.2
+# scikit-learn==1.4.0

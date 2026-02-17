@@ -1,0 +1,9 @@
+{
+    "include": ["backend", "frontend"],
+    "exclude": ["**/node_modules", "**/__pycache__", ".venv", "venv"],
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportOptionalMemberAccess": "none",
+    "pythonVersion": "3.11",
+    "typeCheckingMode": "off"
+}

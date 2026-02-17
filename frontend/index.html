@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FruitAI Pro - Smart Agricultural Management System</title>
+    <meta name="description" content="AI-Powered Fruit Classification and Quality Assessment System">
+    <meta name="theme-color" content="#27ae60">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Cropper.js for Image Cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+</head>
+<body data-theme="dark">
+    <!-- Keyboard Shortcuts Help -->
+    <div id="shortcutsHelp" class="shortcuts-modal hidden">
+        <div class="shortcuts-content">
+            <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+            <div class="shortcuts-grid">
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>U</kbd> <span>Upload Image</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>W</kbd> <span>Toggle Webcam</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>D</kbd> <span>Dashboard</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>N</kbd> <span>Nutrition</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>I</kbd> <span>Inventory</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>H</kbd> <span>History</span></div>
+                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>T</kbd> <span>Toggle Theme</span></div>
+                <div class="shortcut-item"><kbd>?</kbd> <span>Show Shortcuts</span></div>
+            </div>
+            <button class="btn btn-secondary" onclick="document.getElementById('shortcutsHelp').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <!-- Notification Center -->
+    <div id="notificationCenter" class="notification-center hidden">
+        <div class="notification-header">
+            <h3><i class="fas fa-bell"></i> Notifications</h3>
+            <button class="btn-clear-all" id="clearAllNotifications">Clear All</button>
+        </div>
+        <div id="notificationList" class="notification-list">
+            <p class="no-notifications">No notifications</p>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo"><i class="fas fa-leaf"></i> <span class="logo-text">FruitAI Pro</span></h1>
+            <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-section="classify" data-shortcut="c"><i class="fas fa-search"></i> <span data-i18n="nav.classify">Classify</span></button>
+            <button class="nav-btn" data-section="webcam" data-shortcut="w"><i class="fas fa-camera"></i> <span data-i18n="nav.webcam">Webcam</span></button>
+            <button class="nav-btn" data-section="dashboard" data-shortcut="d"><i class="fas fa-chart-line"></i> <span data-i18n="nav.dashboard">Dashboard</span></button>
+            <button class="nav-btn" data-section="nutrition" data-shortcut="n"><i class="fas fa-apple-alt"></i> <span data-i18n="nav.nutrition">Nutrition</span></button>
+            <button class="nav-btn" data-section="inventory" data-shortcut="i"><i class="fas fa-boxes"></i> <span data-i18n="nav.inventory">Inventory</span></button>
+            <button class="nav-btn" data-section="history" data-shortcut="h"><i class="fas fa-history"></i> <span data-i18n="nav.history">History</span></button>
+            <button class="nav-btn" data-section="meal-planner"><i class="fas fa-utensils"></i> <span>Meal Plan</span></button>
+            <button class="nav-btn" data-section="shopping"><i class="fas fa-shopping-cart"></i> <span>Shopping</span></button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="sidebar-actions">
+                <button class="btn-icon" id="themeToggle" title="Toggle Theme (Ctrl+T)"><i class="fas fa-moon"></i></button>
+                <button class="btn-icon" id="notificationBtn" title="Notifications"><i class="fas fa-bell"></i><span class="notification-badge hidden">0</span></button>
+                <button class="btn-icon" id="shortcutsBtn" title="Keyboard Shortcuts (?)"><i class="fas fa-keyboard"></i></button>
+            </div>
+            <div class="language-selector">
+                <select id="languageSelect">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                    <option value="hi">हिन्दी</option>
+                    <option value="pt">Português</option>
+                </select>
+            </div>
+            <button class="btn btn-outline btn-login" id="loginBtn"><i class="fas fa-user"></i> <span data-i18n="header.login">Login</span></button>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header" id="mobileHeader">
+        <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+        <h1 class="logo"><i class="fas fa-leaf"></i> FruitAI Pro</h1>
+        <div class="mobile-actions">
+            <button class="btn-icon" id="mobileThemeToggle"><i class="fas fa-moon"></i></button>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay (for mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Content Wrapper (main + footer) -->
+    <div class="content-wrapper" id="contentWrapper">
+        <!-- Main Content -->
+        <main class="main" id="mainContent">
+            <div class="container">
+            
+            <!-- Classification Section -->
+            <section id="classify-section" class="section active">
+                <div class="hero">
+                    <h2 class="hero-title"><i class="fas fa-brain"></i> <span data-i18n="classify.title">AI-Powered Fruit Recognition</span></h2>
+                    <p class="hero-subtitle">Advanced analysis: classification, ripeness, quality, defects, grading & nutrition</p>
+                </div>
+
+                <!-- Upload Mode Toggle -->
+                <div class="upload-mode-toggle">
+                    <button class="mode-btn active" data-mode="single"><i class="fas fa-image"></i> Single Image</button>
+                    <button class="mode-btn" data-mode="batch"><i class="fas fa-images"></i> Batch Upload</button>
+                </div>
+
+                <!-- Single Upload Area -->
+                <div class="upload-container" id="singleUploadContainer">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <h3 data-i18n="classify.dropzone">Drop image here or click to browse</h3>
+                            <p class="upload-hint" data-i18n="classify.formats">Supports: JPG, PNG, GIF (max 16MB)</p>
+                            <input type="file" id="imageInput" accept="image/*" hidden>
+                            <div class="camera-buttons">
+                                <button class="btn btn-camera" id="takePhotoBtn">📷 <span data-i18n="classify.takePhoto">Take Photo</span></button>
+                                <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+                            </div>
+                        </div>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="previewImg" src="" alt="Preview">
+                            <div class="preview-actions">
+                                <button class="btn btn-sm btn-secondary" id="cropImageBtn" title="Crop Image"><i class="fas fa-crop"></i></button>
+                                <button class="btn-remove" id="removeImage">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Confidence Threshold -->
+                    <div class="confidence-settings">
+                        <label for="confidenceThreshold">Min Confidence Threshold:</label>
+                        <input type="range" id="confidenceThreshold" min="50" max="99" value="70">
+                        <span id="confidenceValue">70%</span>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="classifyBtn" disabled>
+                        <span id="btnText" data-i18n="classify.button">Analyze Fruit</span>
+                        <span id="btnLoader" class="loader hidden"></span>
+                    </button>
+                </div>
+
+                <!-- Batch Upload Area -->
+                <div class="batch-upload-container hidden" id="batchUploadContainer">
+                    <div class="batch-upload-area" id="batchUploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drop multiple images here</h3>
+                        <p>Or click to select files (up to 20 images)</p>
+                        <input type="file" id="batchImageInput" accept="image/*" multiple hidden>
+                    </div>
+                    <div id="batchPreview" class="batch-preview"></div>
+                    <div class="batch-actions hidden" id="batchActions">
+                        <span id="batchCount">0 images selected</span>
+                        <button class="btn btn-secondary" id="clearBatchBtn"><i class="fas fa-trash"></i> Clear All</button>
+                        <button class="btn btn-primary" id="classifyBatchBtn"><i class="fas fa-play"></i> Analyze All</button>
+                    </div>
+                    <div id="batchProgress" class="batch-progress hidden">
+                        <div class="progress-bar"><div class="progress-fill" id="batchProgressFill"></div></div>
+                        <span id="batchProgressText">0/0 processed</span>
+                    </div>
+                    <div id="batchResults" class="batch-results"></div>
+                </div>
+
+                <!-- Results -->
+                <div id="results" class="results hidden">
+                    <!-- Classification Result -->
+                    <div class="result-card">
+                        <h3 class="result-title">🎯 Classification Result</h3>
+                        <div class="result-main">
+                            <div class="result-icon">🍎</div>
+                            <div class="result-info">
+                                <div class="result-class" id="resultClass">Apple</div>
+                                <div class="result-class-translated" id="resultClassTranslated"></div>
+                                <div class="result-confidence">
+                                    <span class="confidence-label">Confidence:</span>
+                                    <span class="confidence-value" id="resultConfidence">95.5%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="top-predictions">
+                            <h4>Top Predictions</h4>
+                            <div id="topPredictions"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ripeness & Quality Card -->
+                    <div class="result-card">
+                        <h3 class="result-title">🍃 Ripeness & Quality Analysis</h3>
+                        <div class="analysis-grid">
+                            <div class="analysis-item">
+                                <span class="analysis-label">Ripeness</span>
+                                <span class="analysis-value" id="ripenessStatus">-</span>
+                                <span class="analysis-description" id="ripenessDescription"></span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="analysis-label">Quality Status</span>
+                                <span class="analysis-value" id="qualityStatus">-</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="analysis-label">Quality Score</span>
+                                <div class="quality-score-bar">
+                                    <div class="quality-score-fill" id="qualityScoreFill"></div>
+                                </div>
+                                <span class="analysis-value" id="qualityScore">-</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span class="analysis-label">Edible</span>
+                                <span class="analysis-value" id="isEdible">-</span>
+                            </div>
+                        </div>
+                        <div id="defectsContainer" class="defects-container hidden">
+                            <h4>⚠️ Defects Detected</h4>
+                            <div id="defectsList" class="defects-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Size & Grading Card -->
+                    <div class="result-card">
+                        <h3 class="result-title">📏 Size & Grading</h3>
+                        <div class="grading-grid">
+                            <div class="grade-item">
+                                <span class="grade-label">Size</span>
+                                <span class="grade-value" id="sizeGrade">-</span>
+                            </div>
+                            <div class="grade-item">
+                                <span class="grade-label">Quality Grade</span>
+                                <span class="grade-badge" id="qualityGrade">-</span>
+                            </div>
+                            <div class="grade-item full-width">
+                                <span class="grade-label">Suitable For</span>
+                                <div id="suitableFor" class="suitable-tags"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations Card -->
+                    <div class="result-card">
+                        <h3 class="result-title">💡 Recommendations</h3>
+                        <div class="recommendations-list">
+                            <div class="recommendation-item">
+                                <span class="rec-icon">🧊</span>
+                                <div class="rec-content">
+                                    <strong>Storage</strong>
+                                    <p id="storageRec">-</p>
+                                </div>
+                            </div>
+                            <div class="recommendation-item">
+                                <span class="rec-icon">⏰</span>
+                                <div class="rec-content">
+                                    <strong>Consumption Window</strong>
+                                    <p id="consumptionRec">-</p>
+                                </div>
+                            </div>
+                            <div class="recommendation-item">
+                                <span class="rec-icon">🤲</span>
+                                <div class="rec-content">
+                                    <strong>Handling</strong>
+                                    <p id="handlingRec">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nutrition Card -->
+                    <div class="result-card" id="nutritionCard">
+                        <h3 class="result-title">🥗 Nutritional Information <span class="serving-size">(per 100g)</span></h3>
+                        <div class="nutrition-grid">
+                            <div class="nutrition-item">
+                                <span class="nutrition-value" id="nutritionCalories">-</span>
+                                <span class="nutrition-label">Calories</span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="nutrition-value" id="nutritionCarbs">-</span>
+                                <span class="nutrition-label">Carbs (g)</span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="nutrition-value" id="nutritionFiber">-</span>
+                                <span class="nutrition-label">Fiber (g)</span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="nutrition-value" id="nutritionSugar">-</span>
+                                <span class="nutrition-label">Sugar (g)</span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="nutrition-value" id="nutritionProtein">-</span>
+                                <span class="nutrition-label">Protein (g)</span>
+                            </div>
+                        </div>
+                        <div class="vitamins-section">
+                            <h4>Vitamins & Minerals</h4>
+                            <div id="vitaminsList" class="vitamins-list"></div>
+                        </div>
+                        <div class="health-benefits-section">
+                            <h4>Health Benefits</h4>
+                            <ul id="healthBenefitsList" class="health-benefits-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Card -->
+                    <div class="result-card feedback-card">
+                        <h3 class="result-title">📝 Was this classification correct?</h3>
+                        <div class="feedback-actions">
+                            <button class="btn btn-success feedback-btn" data-feedback="correct"><i class="fas fa-check"></i> Yes, Correct</button>
+                            <button class="btn btn-warning feedback-btn" data-feedback="partial"><i class="fas fa-exclamation"></i> Partially</button>
+                            <button class="btn btn-danger feedback-btn" data-feedback="incorrect"><i class="fas fa-times"></i> No, Wrong</button>
+                        </div>
+                        <div id="feedbackCorrection" class="feedback-correction hidden">
+                            <label>What was the correct fruit?</label>
+                            <select id="correctFruitSelect">
+                                <option value="">Select correct fruit</option>
+                            </select>
+                            <button class="btn btn-primary" id="submitFeedbackBtn">Submit Feedback</button>
+                        </div>
+                        <p class="feedback-thanks hidden" id="feedbackThanks"><i class="fas fa-heart"></i> Thank you for helping improve our AI!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Webcam Section -->
+            <section id="webcam-section" class="section">
+                <div class="section-header">
+                    <h2>📷 <span data-i18n="webcam.title">Real-Time Detection</span></h2>
+                    <div class="header-actions">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoCapture">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Auto-Capture</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="voiceAnnounce">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Voice</span>
+                        </label>
+                    </div>
+                </div>
+                <p class="webcam-note" id="webcamNote" style="text-align:center; color:#888; margin-bottom:15px; font-size:0.9em;"></p>
+                
+                <!-- Camera Settings -->
+                <div class="camera-settings hidden" id="cameraSettings">
+                    <div class="setting-group">
+                        <label><i class="fas fa-sun"></i> Brightness</label>
+                        <input type="range" id="cameraBrightness" min="-100" max="100" value="0">
+                    </div>
+                    <div class="setting-group">
+                        <label><i class="fas fa-adjust"></i> Contrast</label>
+                        <input type="range" id="cameraContrast" min="-100" max="100" value="0">
+                    </div>
+                    <div class="setting-group">
+                        <label><i class="fas fa-search-plus"></i> Zoom</label>
+                        <input type="range" id="cameraZoom" min="1" max="3" step="0.1" value="1">
+                    </div>
+                    <button class="btn btn-secondary" id="flipCameraBtn"><i class="fas fa-sync"></i> Flip Camera</button>
+                </div>
+                
+                <div class="webcam-container">
+                    <div class="webcam-preview">
+                        <video id="webcamVideo" autoplay playsinline muted></video>
+                        <canvas id="webcamCanvas" style="display:none;"></canvas>
+                        <div class="webcam-overlay hidden" id="webcamOverlay">
+                            <div class="detection-box"></div>
+                            <span class="detection-label">Detecting...</span>
+                        </div>
+                    </div>
+                    <div class="webcam-controls">
+                        <button class="btn btn-primary" id="startWebcam" data-i18n="webcam.start">Start Camera</button>
+                        <button class="btn btn-secondary" id="captureBtn" disabled data-i18n="webcam.capture">Capture & Analyze</button>
+                        <button class="btn btn-secondary" id="stopWebcam" disabled data-i18n="webcam.stop">Stop Camera</button>
+                        <button class="btn btn-secondary" id="settingsWebcam" disabled><i class="fas fa-cog"></i> Settings</button>
+                    </div>
+                    <div id="webcamResults" class="webcam-results hidden">
+                        <div class="webcam-result-card">
+                            <span class="webcam-result-class" id="webcamResultClass">-</span>
+                            <span class="webcam-result-confidence" id="webcamResultConfidence">-</span>
+                            <div class="webcam-result-details">
+                                <span id="webcamRipeness">Ripeness: -</span>
+                                <span id="webcamQuality">Quality: -</span>
+                                <span id="webcamSize">Size: -</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Dashboard Section -->
+            <section id="dashboard-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> <span data-i18n="dashboard.title">Analytics Dashboard</span></h2>
+                    <div class="header-actions">
+                        <div class="date-range-picker">
+                            <input type="date" id="dashboardStartDate" class="date-input">
+                            <span>to</span>
+                            <input type="date" id="dashboardEndDate" class="date-input">
+                        </div>
+                        <select id="dashboardPeriod" class="period-select">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <button class="btn btn-secondary" id="refreshDashboard"><i class="fas fa-sync"></i> <span data-i18n="dashboard.refresh">Refresh</span></button>
+                        <div class="export-dropdown">
+                            <button class="btn btn-outline" id="exportDashboard"><i class="fas fa-download"></i> Export</button>
+                            <div class="export-menu hidden" id="exportMenu">
+                                <button class="export-option" data-format="csv"><i class="fas fa-file-csv"></i> CSV</button>
+                                <button class="export-option" data-format="pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                                <button class="export-option" data-format="json"><i class="fas fa-file-code"></i> JSON</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live Status Bar -->
+                <div class="live-status-bar">
+                    <span class="live-indicator"><span class="live-dot"></span> Live Updates</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoRefreshDashboard" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Auto-refresh (30s)</span>
+                    </label>
+                </div>
+                
+                <!-- Goals Section -->
+                <div class="goals-section">
+                    <h3><i class="fas fa-bullseye"></i> Daily Goals</h3>
+                    <div class="goals-grid">
+                        <div class="goal-card">
+                            <div class="goal-progress">
+                                <svg class="goal-ring" viewBox="0 0 36 36">
+                                    <circle class="goal-bg" cx="18" cy="18" r="15.915"></circle>
+                                    <circle class="goal-fill" id="classifyGoalRing" cx="18" cy="18" r="15.915" style="--progress: 0"></circle>
+                                </svg>
+                                <span class="goal-percent" id="classifyGoalPercent">0%</span>
+                            </div>
+                            <span class="goal-label">Classifications</span>
+                            <span class="goal-value"><span id="classifyGoalCurrent">0</span> / <span id="classifyGoalTarget">50</span></span>
+                        </div>
+                        <div class="goal-card">
+                            <div class="goal-progress">
+                                <svg class="goal-ring" viewBox="0 0 36 36">
+                                    <circle class="goal-bg" cx="18" cy="18" r="15.915"></circle>
+                                    <circle class="goal-fill success" id="qualityGoalRing" cx="18" cy="18" r="15.915" style="--progress: 0"></circle>
+                                </svg>
+                                <span class="goal-percent" id="qualityGoalPercent">0%</span>
+                            </div>
+                            <span class="goal-label">Quality Rate</span>
+                            <span class="goal-value">Target: 85%</span>
+                        </div>
+                        <button class="btn btn-secondary" id="setGoalsBtn"><i class="fas fa-cog"></i> Set Goals</button>
+                    </div>
+                </div>
+                
+                <!-- Accuracy Tracker -->
+                <div class="accuracy-tracker">
+                    <h3><i class="fas fa-bullseye"></i> Prediction Accuracy (User Feedback)</h3>
+                    <div class="accuracy-stats">
+                        <div class="accuracy-stat">
+                            <span class="accuracy-value" id="accuracyCorrect">0</span>
+                            <span class="accuracy-label">Correct</span>
+                        </div>
+                        <div class="accuracy-stat">
+                            <span class="accuracy-value" id="accuracyPartial">0</span>
+                            <span class="accuracy-label">Partial</span>
+                        </div>
+                        <div class="accuracy-stat">
+                            <span class="accuracy-value" id="accuracyIncorrect">0</span>
+                            <span class="accuracy-label">Incorrect</span>
+                        </div>
+                        <div class="accuracy-stat highlight">
+                            <span class="accuracy-value" id="accuracyRate">--%</span>
+                            <span class="accuracy-label">Accuracy Rate</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-value" id="kpiTotal">0</span>
+                            <span class="kpi-label">Total Processed</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-value" id="kpiHealthy">0%</span>
+                            <span class="kpi-label">Healthy Rate</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-value" id="kpiDefective">0%</span>
+                            <span class="kpi-label">Defect Rate</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card info">
+                        <div class="kpi-icon"><i class="fas fa-star"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-value" id="kpiQuality">0</span>
+                            <span class="kpi-label">Avg Quality Score</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie"></i> Quality Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="qualityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar"></i> Fruit Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="fruitChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card wide">
+                        <h3><i class="fas fa-chart-area"></i> Daily Trends</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Spoilage Alerts -->
+                <div class="alerts-section">
+                    <h3><i class="fas fa-bell"></i> Spoilage Alerts</h3>
+                    <div id="spoilageAlerts" class="alerts-container">
+                        <p class="no-alerts"><i class="fas fa-check-circle"></i> No critical spoilage alerts</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Nutrition Database Section -->
+            <section id="nutrition-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-apple-alt"></i> <span data-i18n="nutrition.browse">Nutrition Database</span></h2>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="printNutrition"><i class="fas fa-print"></i> Print</button>
+                        <button class="btn btn-outline" id="exportNutritionPDF"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                    </div>
+                </div>
+                
+                <!-- Nutrition Tabs -->
+                <div class="nutrition-tabs">
+                    <button class="nutrition-tab active" data-tab="browse">🍎 Browse</button>
+                    <button class="nutrition-tab" data-tab="compare">⚖️ Compare</button>
+                    <button class="nutrition-tab" data-tab="search">🔍 Search</button>
+                    <button class="nutrition-tab" data-tab="seasonal">📅 Seasonal</button>
+                </div>
+                
+                <!-- Browse Tab -->
+                <div id="nutrition-tab-browse" class="nutrition-tab-content active">
+                    <div class="nutrition-browser">
+                        <div class="fruit-selector-row">
+                            <div class="fruit-selector">
+                                <label for="fruitSelect">Select a fruit:</label>
+                                <select id="fruitSelect">
+                                    <option value="">-- Choose a fruit --</option>
+                                </select>
+                            </div>
+                            <div class="serving-selector">
+                                <label for="servingSize">Serving size:</label>
+                                <select id="servingSize">
+                                    <option value="50">50g (small)</option>
+                                    <option value="100" selected>100g (standard)</option>
+                                    <option value="150">150g (medium)</option>
+                                    <option value="200">200g (large)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="nutritionDetails" class="nutrition-details hidden">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Compare Tab -->
+                <div id="nutrition-tab-compare" class="nutrition-tab-content">
+                    <div class="compare-container">
+                        <div class="compare-selectors">
+                            <div class="compare-selector">
+                                <label>Fruit 1:</label>
+                                <select id="compareFruit1" class="compare-fruit-select">
+                                    <option value="">Select fruit</option>
+                                </select>
+                            </div>
+                            <div class="compare-selector">
+                                <label>Fruit 2:</label>
+                                <select id="compareFruit2" class="compare-fruit-select">
+                                    <option value="">Select fruit</option>
+                                </select>
+                            </div>
+                            <div class="compare-selector">
+                                <label>Fruit 3 (optional):</label>
+                                <select id="compareFruit3" class="compare-fruit-select">
+                                    <option value="">Select fruit</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="compareFruitsBtn"><i class="fas fa-balance-scale"></i> Compare</button>
+                        </div>
+                        <div id="comparisonResults" class="comparison-results hidden">
+                            <!-- Comparison table populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Tab -->
+                <div id="nutrition-tab-search" class="nutrition-tab-content">
+                    <div class="search-container">
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label>Find fruits:</label>
+                                <select id="searchCriteria">
+                                    <option value="high">Highest in</option>
+                                    <option value="low">Lowest in</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <select id="searchNutrient">
+                                    <option value="fiber">Fiber</option>
+                                    <option value="protein">Protein</option>
+                                    <option value="sugar">Sugar</option>
+                                    <option value="calories">Calories</option>
+                                    <option value="carbs">Carbs</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="searchNutrientBtn"><i class="fas fa-search"></i> Search</button>
+                        </div>
+                        <div class="quick-filters">
+                            <button class="quick-filter-btn" data-filter="low-gi"><i class="fas fa-chart-line"></i> Low Glycemic Index</button>
+                            <button class="quick-filter-btn" data-filter="high-fiber"><i class="fas fa-seedling"></i> High Fiber</button>
+                            <button class="quick-filter-btn" data-filter="low-sugar"><i class="fas fa-candy-cane"></i> Low Sugar</button>
+                            <button class="quick-filter-btn" data-filter="high-vitamin-c"><i class="fas fa-lemon"></i> High Vitamin C</button>
+                        </div>
+                        <div id="searchResults" class="search-results">
+                            <!-- Search results populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Seasonal Tab -->
+                <div id="nutrition-tab-seasonal" class="nutrition-tab-content">
+                    <div class="seasonal-container">
+                        <div class="month-selector">
+                            <label>Select Month:</label>
+                            <select id="seasonalMonth">
+                                <option value="">All Year</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <div id="seasonalResults" class="seasonal-results">
+                            <!-- Seasonal fruits populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-boxes"></i> <span data-i18n="inventory.title">Inventory & Stock</span></h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="importInventoryBtn"><i class="fas fa-upload"></i> Import CSV</button>
+                        <input type="file" id="inventoryImportFile" accept=".csv" hidden>
+                        <button class="btn btn-secondary" id="exportInventoryBtn"><i class="fas fa-download"></i> Export CSV</button>
+                        <button class="btn btn-secondary" id="refreshInventory"><i class="fas fa-sync"></i> <span data-i18n="inventory.refresh">Refresh</span></button>
+                        <button class="btn btn-primary" id="generateQRBtn"><i class="fas fa-qrcode"></i> <span data-i18n="inventory.generateQR">Generate QR</span></button>
+                    </div>
+                </div>
+                
+                <!-- Inventory Alerts -->
+                <div class="inventory-alerts" id="inventoryAlerts">
+                    <div class="alert alert-warning hidden" id="lowStockAlert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Low stock warning: <strong id="lowStockItems">0</strong> items below minimum level</span>
+                        <button class="btn btn-sm btn-secondary" id="viewLowStock">View</button>
+                    </div>
+                    <div class="alert alert-danger hidden" id="expiryAlert">
+                        <i class="fas fa-clock"></i>
+                        <span>Expiring soon: <strong id="expiringItems">0</strong> items expire within 3 days</span>
+                        <button class="btn btn-sm btn-secondary" id="viewExpiring">View</button>
+                    </div>
+                </div>
+                
+                <!-- Quick Add Item -->
+                <div class="quick-add-section">
+                    <h3><i class="fas fa-plus-circle"></i> Quick Add Inventory</h3>
+                    <div class="quick-add-form">
+                        <select id="quickAddFruit" class="form-control">
+                            <option value="">Select Fruit</option>
+                        </select>
+                        <input type="number" id="quickAddQuantity" placeholder="Quantity" min="1" class="form-control">
+                        <select id="quickAddGrade" class="form-control">
+                            <option value="A">Grade A</option>
+                            <option value="B">Grade B</option>
+                            <option value="C">Grade C</option>
+                        </select>
+                        <input type="date" id="quickAddExpiry" class="form-control" title="Expiry Date">
+                        <input type="number" id="quickAddMinStock" placeholder="Min Stock" min="0" class="form-control">
+                        <button class="btn btn-primary" id="quickAddBtn"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                
+                <!-- Category Tabs -->
+                <div class="inventory-tabs">
+                    <button class="inventory-tab active" data-category="all">All Items</button>
+                    <button class="inventory-tab" data-category="low-stock">Low Stock</button>
+                    <button class="inventory-tab" data-category="expiring">Expiring Soon</button>
+                    <button class="inventory-tab" data-category="grade-a">Grade A</button>
+                    <button class="inventory-tab" data-category="grade-b">Grade B</button>
+                </div>
+                
+                <div class="inventory-grid">
+                    <div class="inventory-summary">
+                        <h3>Stock Overview</h3>
+                        <div id="inventoryList" class="inventory-list">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="inventory-chart">
+                        <h3>Grade Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="gradeChart"></canvas>
+                        </div>
+                        <h3 style="margin-top: 20px;">Expiry Timeline</h3>
+                        <div class="chart-container">
+                            <canvas id="expiryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reorder Suggestions -->
+                <div class="reorder-section">
+                    <h3><i class="fas fa-shopping-basket"></i> Reorder Suggestions</h3>
+                    <div id="reorderSuggestions" class="reorder-grid">
+                        <p class="no-suggestions">No reorder suggestions at this time</p>
+                    </div>
+                </div>
+                
+                <!-- QR Code Display -->
+                <div id="qrCodeDisplay" class="qr-display hidden">
+                    <h3><i class="fas fa-qrcode"></i> Generated QR Code</h3>
+                    <div class="qr-content">
+                        <img id="qrCodeImage" src="" alt="QR Code">
+                        <div id="qrCodeData" class="qr-data"></div>
+                    </div>
+                    <button class="btn btn-secondary" id="downloadQR"><i class="fas fa-download"></i> Download QR</button>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="history-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> <span data-i18n="history.title">Classification History</span></h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary view-toggle active" id="historyListView" data-view="list"><i class="fas fa-list"></i></button>
+                        <button class="btn btn-secondary view-toggle" id="historyGalleryView" data-view="gallery"><i class="fas fa-th"></i></button>
+                        <button class="btn btn-secondary" id="refreshHistory"><i class="fas fa-sync"></i> <span data-i18n="history.refresh">Refresh</span></button>
+                    </div>
+                </div>
+                
+                <!-- History Filters -->
+                <div class="history-filters">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label><i class="fas fa-search"></i></label>
+                            <input type="text" id="historySearch" placeholder="Search by fruit name...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Fruit Type:</label>
+                            <select id="historyFruitFilter">
+                                <option value="">All Fruits</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Confidence:</label>
+                            <select id="historyConfidenceFilter">
+                                <option value="">All</option>
+                                <option value="high">High (>90%)</option>
+                                <option value="medium">Medium (70-90%)</option>
+                                <option value="low">Low (<70%)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Quality:</label>
+                            <select id="historyQualityFilter">
+                                <option value="">All</option>
+                                <option value="A">Grade A</option>
+                                <option value="B">Grade B</option>
+                                <option value="C">Grade C</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Date:</label>
+                            <input type="date" id="historyDateFilter">
+                        </div>
+                        <button class="btn btn-secondary" id="clearHistoryFilters"><i class="fas fa-times"></i> Clear</button>
+                    </div>
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="bulk-actions hidden" id="historyBulkActions">
+                    <span id="selectedCount">0 selected</span>
+                    <button class="btn btn-secondary" id="selectAllHistory"><i class="fas fa-check-double"></i> Select All</button>
+                    <button class="btn btn-secondary" id="exportSelectedHistory"><i class="fas fa-download"></i> Export</button>
+                    <button class="btn btn-secondary" id="favoriteSelectedHistory"><i class="fas fa-star"></i> Favorite</button>
+                    <button class="btn btn-danger" id="deleteSelectedHistory"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+                
+                <div id="historyContainer" class="history-container">
+                    <div class="loader-center">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination" id="historyPagination">
+                    <button class="btn btn-secondary" id="historyPrevPage" disabled><i class="fas fa-chevron-left"></i></button>
+                    <span id="historyPageInfo">Page 1 of 1</span>
+                    <button class="btn btn-secondary" id="historyNextPage" disabled><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </section>
+
+            <!-- Meal Planner Section -->
+            <section id="meal-planner-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-utensils"></i> Meal Planner</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-success" id="autoGenerateMealPlan"><i class="fas fa-magic"></i> Auto Generate</button>
+                        <button class="btn btn-secondary" id="clearMealPlan"><i class="fas fa-trash"></i> Clear Plan</button>
+                        <button class="btn btn-primary" id="saveMealPlan"><i class="fas fa-save"></i> Save Plan</button>
+                    </div>
+                </div>
+                
+                <div class="meal-planner-container">
+                    <!-- Weekly View -->
+                    <div class="meal-week-grid">
+                        <div class="meal-day" data-day="monday">
+                            <h4>Monday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="tuesday">
+                            <h4>Tuesday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="wednesday">
+                            <h4>Wednesday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="thursday">
+                            <h4>Thursday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="friday">
+                            <h4>Friday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="saturday">
+                            <h4>Saturday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                        <div class="meal-day" data-day="sunday">
+                            <h4>Sunday</h4>
+                            <div class="meal-slot" data-meal="breakfast"><span class="meal-label">Breakfast</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="lunch"><span class="meal-label">Lunch</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="snack"><span class="meal-label">Snack</span><div class="meal-fruits"></div></div>
+                            <div class="meal-slot" data-meal="dinner"><span class="meal-label">Dinner</span><div class="meal-fruits"></div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar: Fruit Picker & Nutrition Summary -->
+                    <div class="meal-sidebar">
+                        <div class="fruit-picker">
+                            <h4>Add Fruits</h4>
+                            <div class="fruit-picker-grid" id="mealFruitPicker">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="meal-nutrition-summary">
+                            <h4>Weekly Nutrition</h4>
+                            <div class="meal-totals">
+                                <div class="meal-total"><span class="value" id="mealTotalCalories">0</span><span class="label">Calories</span></div>
+                                <div class="meal-total"><span class="value" id="mealTotalFiber">0g</span><span class="label">Fiber</span></div>
+                                <div class="meal-total"><span class="value" id="mealTotalSugar">0g</span><span class="label">Sugar</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shopping List Section -->
+            <section id="shopping-section" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Shopping List</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="generateFromInventory"><i class="fas fa-magic"></i> Auto-Generate</button>
+                        <button class="btn btn-secondary" id="printShoppingList"><i class="fas fa-print"></i> Print</button>
+                        <button class="btn btn-secondary" id="shareShoppingList"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                </div>
+                
+                <div class="shopping-container">
+                    <div class="shopping-list-area">
+                        <div class="add-item-form">
+                            <input type="text" id="shoppingItemInput" placeholder="Add item..." class="form-control">
+                            <input type="number" id="shoppingItemQty" placeholder="Qty" min="1" value="1" class="form-control qty-input">
+                            <button class="btn btn-primary" id="addShoppingItem"><i class="fas fa-plus"></i></button>
+                        </div>
+                        
+                        <div class="shopping-categories">
+                            <div class="shopping-category" data-category="fruits">
+                                <h4><i class="fas fa-apple-alt"></i> Fruits</h4>
+                                <div id="shoppingFruits" class="shopping-items"></div>
+                            </div>
+                            <div class="shopping-category" data-category="vegetables">
+                                <h4><i class="fas fa-carrot"></i> Vegetables</h4>
+                                <div id="shoppingVegetables" class="shopping-items"></div>
+                            </div>
+                            <div class="shopping-category" data-category="other">
+                                <h4><i class="fas fa-box"></i> Other</h4>
+                                <div id="shoppingOther" class="shopping-items"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="shopping-summary">
+                        <h4>Summary</h4>
+                        <div class="summary-stats">
+                            <div class="stat"><span id="totalShoppingItems">0</span> items</div>
+                            <div class="stat"><span id="checkedItems">0</span> checked</div>
+                        </div>
+                        <div class="estimated-nutrition">
+                            <h5>Est. Nutrition (Fruits)</h5>
+                            <p>Calories: <span id="estShopCalories">0</span></p>
+                            <p>Fiber: <span id="estShopFiber">0g</span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Achievements Section (Hidden by default, show in profile) -->
+            <div id="achievementsPanel" class="achievements-panel hidden">
+                <h3><i class="fas fa-trophy"></i> Achievements</h3>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <div class="achievement unlocked">
+                        <div class="achievement-icon">🎯</div>
+                        <span class="achievement-name">First Classification</span>
+                        <span class="achievement-desc">Classify your first fruit</span>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🔥</div>
+                        <span class="achievement-name">On Fire</span>
+                        <span class="achievement-desc">Classify 10 fruits in one day</span>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🎓</div>
+                        <span class="achievement-name">Expert</span>
+                        <span class="achievement-desc">100 total classifications</span>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">⭐</div>
+                        <span class="achievement-name">Quality Checker</span>
+                        <span class="achievement-desc">Find 10 Grade A fruits</span>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">📷</div>
+                        <span class="achievement-name">Camera Pro</span>
+                        <span class="achievement-desc">Use webcam 20 times</span>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🌈</div>
+                        <span class="achievement-name">Variety</span>
+                        <span class="achievement-desc">Classify all 10 fruit types</span>
+                    </div>
+                </div>
+                <div class="achievement-progress">
+                    <span>Progress: <strong id="achievementCount">1/6</strong></span>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 16.6%"></div></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-leaf"></i> FruitAI Pro</h3>
+                    <p>Smart Agricultural Management System</p>
+                    <p>&copy; 2026 Powered by AI & Deep Learning</p>
+                </div>
+                <div class="footer-links-section">
+                    <h4>Resources</h4>
+                    <a href="#" id="privacyLink"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+                    <a href="#" id="limitationsLink"><i class="fas fa-info-circle"></i> System Limitations</a>
+                    <a href="#" id="ethicsLink"><i class="fas fa-balance-scale"></i> Ethical AI Guidelines</a>
+                </div>
+                <div class="footer-links-section">
+                    <h4>Features</h4>
+                    <a href="#"><i class="fas fa-search"></i> Classification</a>
+                    <a href="#"><i class="fas fa-chart-line"></i> Analytics</a>
+                    <a href="#"><i class="fas fa-clock"></i> Spoilage Prediction</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    </div><!-- End content-wrapper -->
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <span class="modal-close">&times;</span>
+            
+            <!-- Login Form -->
+            <div id="loginFormContainer">
+                <h2><i class="fas fa-user-circle"></i> Login</h2>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+                <div class="auth-switch">
+                    <p>Don't have an account? <a href="#" id="showSignup">Sign Up</a></p>
+                </div>
+                <div class="auth-footer">
+                    <p>Demo Credentials:</p>
+                    <small>Admin: admin / admin123</small><br>
+                    <small>Farmer: farmer1 / farmer123</small>
+                </div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signupFormContainer" class="hidden">
+                <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="signupFullname">Full Name</label>
+                        <input type="text" id="signupFullname" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupUsername">Username</label>
+                        <input type="text" id="signupUsername" placeholder="Choose a username" required minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" placeholder="Choose a password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupConfirmPassword">Confirm Password</label>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupRole">Account Type</label>
+                        <select id="signupRole" required>
+                            <option value="buyer">Buyer</option>
+                            <option value="farmer">Farmer</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-user-plus"></i> Create Account</button>
+                </form>
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div id="privacyModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2><i class="fas fa-shield-alt"></i> Privacy & Data Handling</h2>
+            <div id="privacyContent"></div>
+        </div>
+    </div>
+
+    <!-- Limitations Modal -->
+    <div id="limitationsModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2><i class="fas fa-info-circle"></i> System Limitations</h2>
+            <div id="limitationsContent"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="/static/js/translations.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

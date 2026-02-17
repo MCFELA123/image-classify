@@ -1,0 +1,27 @@
+services:
+  # Flask Web Service
+  - type: web
+    name: fruit-classifier
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        fromDatabase:
+          name: fruit-classifier-db
+          property: connectionString
+    healthCheckPath: /api/health
+
+  # MongoDB Database
+  - type: pserv
+    name: fruit-classifier-db
+    env: docker
+    dockerfilePath: ./Dockerfile.mongodb
+    disk:
+      name: mongodb-data
+      mountPath: /data/db
+      sizeGB: 1
