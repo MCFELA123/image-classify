@@ -1,7 +1,7 @@
 # Core Dependencies (Required)
 flask==3.0.0
 flask-cors==4.0.0
-openai==1.12.0
+openai>=1.12.0
 numpy>=1.24.0,<2.0.0
 pillow==10.1.0
 pymongo==4.6.1

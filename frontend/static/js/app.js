@@ -516,7 +516,7 @@ async function classifyBatch() {
             const formData = new FormData();
             formData.append('image', batchFiles[i]);
             formData.append('language', currentLanguage);
-            formData.append('mode', 'quick');
+            formData.append('analysis_mode', 'full');  // Use full analysis mode
             
             const response = await fetch(`${API_BASE}/classify`, {
                 method: 'POST',
@@ -524,19 +524,25 @@ async function classifyBatch() {
             });
             const data = await response.json();
             
+            // Use the correct response structure
+            const predictedClass = data.predicted_class || 'Unknown';
+            const confidence = data.confidence || '-';
+            
             results.innerHTML += `
                 <div class="batch-result-item">
                     <img src="${URL.createObjectURL(batchFiles[i])}" alt="Result">
                     <div class="batch-result-info">
-                        <strong>${data.classification?.predicted_class || 'Unknown'}</strong>
-                        <span>${data.classification?.confidence || '-'}%</span>
+                        <strong>${predictedClass}</strong>
+                        <span>${confidence}</span>
+                        ${data.ripeness ? `<small>Ripeness: ${data.ripeness}</small>` : ''}
                     </div>
                 </div>
             `;
         } catch (error) {
+            console.error('Batch error:', error);
             results.innerHTML += `
                 <div class="batch-result-item error">
-                    <strong>Error</strong>
+                    <strong>Error processing</strong>
                     <span>${batchFiles[i].name}</span>
                 </div>
             `;
@@ -544,6 +550,7 @@ async function classifyBatch() {
     }
     
     showToast(`Batch processing complete: ${batchFiles.length} images`, 'success');
+    progress?.classList.add('hidden');
 }
 
 function openCropModal() {
@@ -1103,15 +1110,20 @@ async function captureAndAnalyze() {
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     
-    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
     captureBtn.disabled = true;
     captureBtn.textContent = 'Analyzing...';
     
     try {
+        // Use full analysis mode for better accuracy
         const response = await fetch(`${API_BASE}/analyze/base64`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: imageData, language: currentLanguage })
+            body: JSON.stringify({ 
+                image: imageData, 
+                language: currentLanguage,
+                analysis_mode: 'full'  // Use full analysis for better accuracy
+            })
         });
         
         const data = await response.json();
@@ -1123,7 +1135,7 @@ async function captureAndAnalyze() {
             document.getElementById('webcamQuality').textContent = `Quality: ${data.quality_status || '-'}`;
             document.getElementById('webcamSize').textContent = `Size: ${data.size_grade || '-'}`;
             document.getElementById('webcamResults').classList.remove('hidden');
-            showToast('Analysis complete!', 'success');
+            showToast(`Detected: ${data.predicted_class} (${data.confidence})`, 'success');
         } else {
             showToast(data.error || 'Analysis failed', 'error');
         }
@@ -2349,18 +2361,51 @@ function exportInventoryCSV() {
 
 async function quickAddInventory() {
     const fruit = document.getElementById('quickAddFruit')?.value;
-    const quantity = document.getElementById('quickAddQuantity')?.value;
+    const quantity = parseInt(document.getElementById('quickAddQuantity')?.value);
     const grade = document.getElementById('quickAddGrade')?.value;
     const expiry = document.getElementById('quickAddExpiry')?.value;
-    const minStock = document.getElementById('quickAddMinStock')?.value;
+    const minStock = parseInt(document.getElementById('quickAddMinStock')?.value) || 10;
     
     if (!fruit || !quantity) {
         showToast('Please select fruit and enter quantity', 'warning');
         return;
     }
     
-    showToast(`Added ${quantity} ${fruit} (Grade ${grade}) to inventory`, 'success');
-    loadInventory();
+    try {
+        // Save to backend by creating a classification entry
+        const response = await fetch(`${API_BASE}/history`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                predicted_class: fruit,
+                confidence: 1.0,
+                quality_grade: grade,
+                quantity: quantity,
+                expiry_date: expiry,
+                min_stock: minStock,
+                source: 'inventory_manual',
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            showToast(`Added ${quantity} ${fruit} (Grade ${grade}) to inventory`, 'success');
+            
+            // Clear form
+            document.getElementById('quickAddQuantity').value = '';
+            if (document.getElementById('quickAddExpiry')) {
+                document.getElementById('quickAddExpiry').value = '';
+            }
+            
+            // Reload inventory
+            await loadInventory();
+        } else {
+            showToast('Failed to add to inventory', 'error');
+        }
+    } catch (error) {
+        console.error('Add inventory error:', error);
+        showToast('Error adding to inventory', 'error');
+    }
 }
 
 function filterInventoryByCategory(category) {
@@ -2665,20 +2710,52 @@ async function autoGenerateMealPlan() {
     }
 }
 
-function updateMealNutritionSummary() {
+async function updateMealNutritionSummary() {
     // Calculate total nutrition from meal plan
     let totalCalories = 0;
     let totalFiber = 0;
     let totalSugar = 0;
+    let totalVitaminC = 0;
+    let totalPotassium = 0;
+    
+    try {
+        // Get nutrition data for all fruits in meal plan
+        const allFruits = Object.values(mealPlan).flat();
+        const uniqueFruits = [...new Set(allFruits)];
+        
+        for (const fruit of uniqueFruits) {
+            const count = allFruits.filter(f => f === fruit).length;
+            
+            // Fetch nutrition data
+            const response = await fetch(`${API_BASE}/nutrition/${fruit.toLowerCase()}`);
+            if (response.ok) {
+                const data = await response.json();
+                const nutrition = data.nutrition || {};
+                
+                // Add to totals (multiply by count)
+                totalCalories += (parseFloat(nutrition.calories) || 0) * count;
+                totalFiber += (parseFloat(nutrition.fiber?.replace('g', '')) || 0) * count;
+                totalSugar += (parseFloat(nutrition.sugars?.replace('g', '')) || 0) * count;
+                totalVitaminC += (parseFloat(nutrition.vitamin_c?.replace('mg', '')) || 0) * count;
+                totalPotassium += (parseFloat(nutrition.potassium?.replace('mg', '')) || 0) * count;
+            }
+        }
+    } catch (error) {
+        console.error('Error calculating nutrition:', error);
+    }
     
     // Update UI
     const caloriesEl = document.getElementById('mealTotalCalories');
     const fiberEl = document.getElementById('mealTotalFiber');
     const sugarEl = document.getElementById('mealTotalSugar');
+    const vitaminCEl = document.getElementById('mealTotalVitaminC');
+    const potassiumEl = document.getElementById('mealTotalPotassium');
     
-    if (caloriesEl) caloriesEl.textContent = totalCalories;
-    if (fiberEl) fiberEl.textContent = totalFiber + 'g';
-    if (sugarEl) sugarEl.textContent = totalSugar + 'g';
+    if (caloriesEl) caloriesEl.textContent = Math.round(totalCalories);
+    if (fiberEl) fiberEl.textContent = Math.round(totalFiber) + 'g';
+    if (sugarEl) sugarEl.textContent = Math.round(totalSugar) + 'g';
+    if (vitaminCEl) vitaminCEl.textContent = Math.round(totalVitaminC) + 'mg';
+    if (potassiumEl) potassiumEl.textContent = Math.round(totalPotassium) + 'mg';
 }
 
 // ==================== SHOPPING LIST ====================
