@@ -2769,6 +2769,9 @@ function initShoppingList() {
     document.getElementById('shoppingItemInput')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addShoppingItem();
     });
+    
+    // Initialize the UI on load
+    updateShoppingListUI();
 }
 
 function updateShoppingListUI() {
@@ -2904,7 +2907,64 @@ async function generateShoppingFromInventory() {
 }
 
 function printShoppingList() {
-    window.print();
+    const fruitsHtml = shoppingList.fruits.map(item => 
+        `<div style="padding: 8px; border-bottom: 1px solid #ddd;">
+            <span style="font-weight: ${item.checked ? 'normal' : 'bold'}; text-decoration: ${item.checked ? 'line-through' : 'none'};">
+                ${item.name}
+            </span>
+            <span style="float: right;">Qty: ${item.qty}</span>
+        </div>`
+    ).join('');
+    
+    const othersHtml = shoppingList.other.map(item => 
+        `<div style="padding: 8px; border-bottom: 1px solid #ddd;">
+            <span style="font-weight: ${item.checked ? 'normal' : 'bold'}; text-decoration: ${item.checked ? 'line-through' : 'none'};">
+                ${item.name}
+            </span>
+            <span style="float: right;">Qty: ${item.qty}</span>
+        </div>`
+    ).join('');
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Shopping List</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+                h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                h3 { color: #34495e; margin-top: 20px; }
+                .section { margin-bottom: 30px; }
+                @media print {
+                    body { padding: 10px; }
+                }
+            </style>
+        </head>
+        <body>
+            <h2>🛒 Shopping List</h2>
+            <p style="color: #7f8c8d;">Generated on ${new Date().toLocaleDateString()}</p>
+            
+            ${shoppingList.fruits.length > 0 ? `
+                <div class="section">
+                    <h3>🍎 Fruits</h3>
+                    ${fruitsHtml}
+                </div>
+            ` : ''}
+            
+            ${shoppingList.other.length > 0 ? `
+                <div class="section">
+                    <h3>🛒 Other Items</h3>
+                    ${othersHtml}
+                </div>
+            ` : ''}
+            
+            ${shoppingList.fruits.length === 0 && shoppingList.other.length === 0 ? 
+                '<p style="color: #7f8c8d; text-align: center; padding: 40px;">Your shopping list is empty</p>' : ''}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 250);
 }
 
 function shareShoppingList() {

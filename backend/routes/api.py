@@ -295,7 +295,7 @@ def handle_history():
             # Save to database
             db = get_db()
             if db:
-                classification_id = db.save_classification(entry)
+                classification_id = db.save_classification('manual_entry', entry)
                 return jsonify({
                     'success': True,
                     'classification_id': classification_id,
