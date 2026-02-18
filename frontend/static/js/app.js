@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNotifications();
     initDashboardEnhancements();
     initInventoryEnhancements();
+    initFeedbackSystem();
     initMealPlanner();
     initShoppingList();
     registerServiceWorker();
@@ -2845,9 +2846,61 @@ function updateShoppingSummary() {
     if (checkedEl) checkedEl.textContent = checked;
 }
 
-function generateShoppingFromInventory() {
-    showToast('Generating shopping list from low inventory items...', 'info');
-    // Would fetch inventory and add low-stock items to shopping list
+async function generateShoppingFromInventory() {
+    try {
+        showToast('Generating shopping list from inventory...', 'info');
+        
+        // Fetch current inventory data
+        const response = await fetch(`${API_BASE}/analytics/inventory?days=7`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch inventory');
+        }
+        
+        const data = await response.json();
+        const inventory = data.inventory || {};
+        
+        // Clear current shopping list
+        shoppingList.fruits = [];
+        
+        // Add items with low stock or that need restocking
+        Object.entries(inventory).forEach(([fruit, info]) => {
+            const count = info.count || 0;
+            const minStock = 10; // Default minimum stock
+            
+            if (count < minStock) {
+                const needed = minStock - count;
+                shoppingList.fruits.push({
+                    name: fruit,
+                    qty: needed,
+                    checked: false,
+                    category: 'fruits'
+                });
+            }
+        });
+        
+        // If no low stock items, add popular fruits
+        if (shoppingList.fruits.length === 0) {
+            const popularFruits = ['Apple', 'Banana', 'Orange', 'Mango', 'Strawberry'];
+            popularFruits.forEach(fruit => {
+                shoppingList.fruits.push({
+                    name: fruit,
+                    qty: 5,
+                    checked: false,
+                    category: 'fruits'
+                });
+            });
+            showToast('Added popular fruits to shopping list', 'success');
+        } else {
+            showToast(`Added ${shoppingList.fruits.length} low-stock items to shopping list`, 'success');
+        }
+        
+        // Update the UI
+        updateShoppingListUI();
+        
+    } catch (error) {
+        console.error('Error generating shopping list:', error);
+        showToast('Failed to generate shopping list', 'error');
+    }
 }
 
 function printShoppingList() {

@@ -267,9 +267,47 @@ def classify_image():
         return jsonify({'error': f'Classification failed: {str(e)}'}), 500
 
 
-@api_bp.route('/history', methods=['GET'])
-def get_history():
-    """Get recent classification history"""
+@api_bp.route('/history', methods=['GET', 'POST'])
+def handle_history():
+    """Get recent classification history or add manual entry"""
+    if request.method == 'POST':
+        # Add manual inventory entry
+        try:
+            data = request.get_json()
+            
+            predicted_class = data.get('predicted_class')
+            if not predicted_class:
+                return jsonify({'error': 'predicted_class is required'}), 400
+            
+            # Create entry for database
+            entry = {
+                'predicted_class': predicted_class,
+                'confidence': data.get('confidence', 1.0),
+                'quality_grade': data.get('quality_grade', 'A'),
+                'quantity': data.get('quantity', 1),
+                'expiry_date': data.get('expiry_date'),
+                'min_stock': data.get('min_stock', 10),
+                'source': data.get('source', 'manual'),
+                'timestamp': data.get('timestamp'),
+                'image_filename': 'manual_entry'
+            }
+            
+            # Save to database
+            db = get_db()
+            if db:
+                classification_id = db.save_classification(entry)
+                return jsonify({
+                    'success': True,
+                    'classification_id': classification_id,
+                    'message': 'Inventory item added successfully'
+                }), 201
+            else:
+                return jsonify({'error': 'Database not available'}), 503
+                
+        except Exception as e:
+            return jsonify({'error': f'Failed to add inventory: {str(e)}'}), 500
+    
+    # GET request - return history
     try:
         db = get_db()
         if not db:
